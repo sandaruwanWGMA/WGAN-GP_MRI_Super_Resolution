@@ -12,8 +12,8 @@ from models.wgan_3d import DCWGAN
 if __name__ == '__main__':
         
         # load weights
-        critic.load_weights("models/weights/dc_wgan_low/critic_dc_wgan_low_2.h5")
-        generator.load_weights("models/weights/dc_wgan_low/generator_dc_wgan_low_2.h5")
+        critic.load_weights("/kaggle/input/model/tensorflow2/default/1/critic_dc_wgan_low.h5")
+        generator.load_weights("/kaggle/input/model/tensorflow2/default/1/generator_dc_wgan_low.h5")
         
         # Create adversarial graph
         gen_opt = Adam()
