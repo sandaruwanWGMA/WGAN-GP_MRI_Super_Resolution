@@ -13,13 +13,13 @@ from models.wgan_3d import DCWGAN
 
 
 # Function to save loss plots
-def save_loss_plots(g_losses, c_losses, save_path):
+def save_loss_plots(g_losses, d_losses, save_path):
     """
-    Save plot of generator and critic losses
+    Save plot of generator and discriminator losses
     
     Args:
         g_losses (list): Generator losses
-        c_losses (list): Critic losses
+        d_losses (list): Discriminator losses
         save_path (str): Path to save the plot
     """
     plt.figure(figsize=(10, 5))
@@ -31,10 +31,10 @@ def save_loss_plots(g_losses, c_losses, save_path):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     
-    # Plot critic loss
+    # Plot discriminator loss
     plt.subplot(1, 2, 2)
-    plt.plot(c_losses)
-    plt.title('Critic Loss')
+    plt.plot(d_losses)
+    plt.title('Discriminator Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         # --------------------
 
         batch_size = 4  # Samples every epoch
-        n_epochs = 200  # Training Epochs (changed to 200)
+        n_epochs = 1000  # Training Epochs (changed to 1000)
         plot_interval = 20  # Every plot_interval create a graph with real and generated data distribution
         c_loops = 5  # number of loops to train critic every epoch
         z_control = tf.random.normal((1, wgan.z_units))  # Vector to feed gen and control training evolution
@@ -81,7 +81,7 @@ if __name__ == '__main__':
         # --------------------
 
         generator_train_loss = tf.keras.metrics.Mean('generator_train_loss', dtype=tf.float32)
-        critic_train_loss = tf.keras.metrics.Mean('critic_train_loss', dtype=tf.float32)
+        discriminator_train_loss = tf.keras.metrics.Mean('discriminator_train_loss', dtype=tf.float32)
 
         # Set Tensorboard Directory to track data
         time_now = strftime("%d-%b-%H%M", localtime())
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         tf.summary.trace_on()
 
         # Lists to store losses for plotting
-        g_loss_list, c_loss_list = [], []
+        g_loss_list, d_loss_list = [], []
 
         print("START TRAINING")
         for epoch in range(n_epochs):
@@ -121,19 +121,19 @@ if __name__ == '__main__':
                 #  TENSORBOARD TRACKING
                 # ------------------------
 
-                # Save generator and critic losses
+                # Save generator and discriminator losses
                 generator_train_loss(g_loss)
-                critic_train_loss(c_loss)
+                discriminator_train_loss(c_loss)
                 
                 # Store losses for plotting
                 g_loss_list.append(float(g_loss))
-                c_loss_list.append(float(c_loss))
+                d_loss_list.append(float(c_loss))
 
                 # track data through console
                 template = 'Epoch {}/{}, Gen Loss: {:.4f}, Dis Loss {:.4f}'
                 print(template.format(epoch + 1, n_epochs,
                                       generator_train_loss.result(),
-                                      critic_train_loss.result()))
+                                      discriminator_train_loss.result()))
 
                 # -----------------------
                 #  TENSORBOARD PLOTTING
@@ -147,13 +147,13 @@ if __name__ == '__main__':
                                           step=epoch)
 
                         tf.summary.scalar('Discriminator Loss',
-                                          critic_train_loss.result(),
+                                          discriminator_train_loss.result(),
                                           step=epoch)
                 
                 # Save loss plots periodically
                 if (epoch + 1) % plot_interval == 0 or epoch == n_epochs - 1:
                     loss_plot_path = path.join(plots_dir, f'losses_epoch_{epoch+1}.png')
-                    save_loss_plots(g_loss_list, c_loss_list, loss_plot_path)
+                    save_loss_plots(g_loss_list, d_loss_list, loss_plot_path)
                     print(f"Saved loss plot at epoch {epoch+1}")
 
                 print("Epoch took {} seconds".format(round(time() - start_time, 2)))
@@ -184,5 +184,5 @@ if __name__ == '__main__':
         
         # Save final loss plot
         final_loss_plot_path = path.join(plots_dir, 'final_losses.png')
-        save_loss_plots(g_loss_list, c_loss_list, final_loss_plot_path)
+        save_loss_plots(g_loss_list, d_loss_list, final_loss_plot_path)
         print(f"Final loss plot saved to {final_loss_plot_path}")
