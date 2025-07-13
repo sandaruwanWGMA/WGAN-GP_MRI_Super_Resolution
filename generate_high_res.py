@@ -1,9 +1,60 @@
 import os
+import sys
 import numpy as np
 import tensorflow as tf
 import nibabel as nib
-from models.wgan_3d_low import generator
+
+# Add current directory to Python path to fix import issues on Kaggle
+sys.path.insert(0, os.getcwd())
+
 from utils.super_res_data_generator import SuperResDataGenerator
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense, Input, Conv3DTranspose, Reshape, LeakyReLU, Flatten, Conv3D
+
+# Initialize NN weights
+init = tf.initializers.RandomNormal(stddev=0.02)
+
+# Create generator Graph (copy from models/wgan_3d_low.py)
+generator = Sequential(
+        [       # Input
+                Input(shape=(10,), name='z_input'),
+                # 1st Deconvolution
+                Dense(2 * 2 * 2 * 128),
+                LeakyReLU(alpha=0.2, name='lrelu_1'),
+                Reshape((2, 2, 2, 128), name="conv_1"),
+                # 2nd Deconvolution
+                Conv3DTranspose(
+                        filters=64,
+                        kernel_size=5,
+                        strides=(2, 2, 2),
+                        kernel_initializer=init,
+                        use_bias=True,
+                        padding="same",
+                        name="conv_2"),
+                LeakyReLU(alpha=0.2, name='lrelu_2'),
+                # 3rd Deconvolution
+                Conv3DTranspose(
+                        filters=32,
+                        kernel_size=5,
+                        strides=(2, 2, 2),
+                        kernel_initializer=init,
+                        use_bias=True,
+                        padding='same',
+                        name="conv_3"),
+                LeakyReLU(alpha=0.2, name='lrelu_3'),
+                # Output
+                Conv3DTranspose(
+                        filters=1,
+                        kernel_size=5,
+                        strides=(2, 2, 2),
+                        kernel_initializer=init,
+                        activation='linear',
+                        use_bias=True,
+                        padding='same',
+                        name='output')
+        ],
+        name="generator",
+)
 
 def save_nifti(img_data, output_path, reference_file=None):
     """
@@ -104,7 +155,7 @@ def generate_high_res(low_res_file, output_file):
     print(f"Extracted {len(lr_patches)} patches of size 16x16x16")
     
     # Load the generator model
-    generator.load_weights("models/weights/dc_wgan_low/generator_dc_wgan_low_sr.h5")
+    generator.load_weights("/kaggle/input/model/tensorflow2/default/1/generator_dc_wgan_low.h5")
     
     # Process patches in batches to avoid memory issues
     batch_size = 8
@@ -140,11 +191,11 @@ def generate_high_res(low_res_file, output_file):
     print(f"Successfully generated high-resolution MRI: {output_file}")
 
 if __name__ == "__main__":
-    # Path to low-res file
-    low_res_file = "lowres_CC0001_philips_15_55_M.nii"
+    # Path to low-res file in Kaggle
+    low_res_file = "/kaggle/input/high-res-and-low-res-mri/Refined-MRI-dataset/Low-Res/lowres_CC0001_philips_15_55_M.nii"
     
     # Output file
-    output_file = "highres_CC0001_philips_15_55_M.nii"
+    output_file = "/kaggle/working/highres_CC0001_philips_15_55_M.nii"
     
     # Generate high-res MRI
     generate_high_res(low_res_file, output_file) 
