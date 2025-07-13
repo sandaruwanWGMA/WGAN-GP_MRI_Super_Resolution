@@ -1,0 +1,7 @@
+.*
+!/.gitignore
+/logs
+/animation.gif
+/models/animation.gif
+/resources/data/
+/resources/mri/*
