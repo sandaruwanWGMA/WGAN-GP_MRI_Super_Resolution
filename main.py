@@ -71,7 +71,7 @@ if __name__ == '__main__':
         # --------------------
 
         batch_size = 4  # Samples every epoch
-        n_epochs = 500  # Training Epochs (changed to 500)
+        n_epochs = 200  # Training Epochs (changed to 200)
         plot_interval = 20  # Every plot_interval create a graph with real and generated data distribution
         c_loops = 5  # number of loops to train critic every epoch
         z_control = tf.random.normal((1, wgan.z_units))  # Vector to feed gen and control training evolution
